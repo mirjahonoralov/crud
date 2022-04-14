@@ -1,17 +1,16 @@
 import React from "react";
-import { Form, Input, InputNumber, Button } from "antd";
-import { layout, validateMessages } from "./GroupFormData";
-import uuid from "react-uuid";
+import { Form, Input, Button, Select } from "antd";
+import { layout, validateMessages } from "./UsersFormData";
 
-const GroupForm = ({ getUser, modalValues, editUser, clearForm }) => {
+const UsersForm = ({ getUser, modalValues, clearForm, submitLoading }) => {
   const [form] = Form.useForm();
-  form.setFieldsValue(modalValues);
-  !modalValues.name && clearForm && form.resetFields();
+  const { Option } = Select;
+  console.log(modalValues);
+  modalValues.name && form.setFieldsValue(modalValues);
+  clearForm && form.resetFields();
 
   const onFinish = (values) => {
-    modalValues.name
-      ? editUser(modalValues, { ...values, key: uuid() })
-      : getUser(values);
+    getUser(values);
     form.resetFields();
   };
 
@@ -46,25 +45,27 @@ const GroupForm = ({ getUser, modalValues, editUser, clearForm }) => {
         >
           <Input />
         </Form.Item>
+        <Form.Item name="role" label="Role">
+          <Select placeholder="Select">
+            <Option value="user">User</Option>
+            <Option value="publisher">Publisher</Option>
+          </Select>
+        </Form.Item>
         <Form.Item
-          name="age"
-          label="Age"
+          name="password"
+          label="password"
           rules={[
             {
-              type: "number",
-              min: 0,
-              max: 99,
+              required: true,
+              message: "Please input your password!",
             },
           ]}
         >
-          <InputNumber />
-        </Form.Item>
-        <Form.Item name="address" label="address">
-          <Input.TextArea />
+          <Input.Password />
         </Form.Item>
         <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
           <div className="d-flex gap-3">
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" loading={submitLoading}>
               Submit
             </Button>
             <Button htmlType="button" onClick={() => form.resetFields()}>
@@ -77,4 +78,4 @@ const GroupForm = ({ getUser, modalValues, editUser, clearForm }) => {
   );
 };
 
-export default GroupForm;
+export default UsersForm;

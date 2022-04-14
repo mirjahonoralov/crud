@@ -1,150 +1,93 @@
-import { Divider, Modal, Table } from "antd";
+import { Modal, Table } from "antd";
 import React, { useEffect, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import uuid from "react-uuid";
-import CoursesForm from "../components/CoursesForm";
-import { columns, defaultModalValues } from "../components/CoursesFormData";
-import axios from "axios";
-import { API_URL } from "../const";
+import { useSelector } from "react-redux";
+import CoursesForm from "../components/courses/CoursesForm";
+import { columns } from "../components/courses/CoursesFormData";
+import Loading from "../components/loading";
+import PagesTop from "../components/pages-top/PagesTop";
+import {
+  deleteData,
+  getData,
+  postData,
+  updateData,
+} from "../server/crud-operations";
 
 const Courses = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selected, setSelected] = useState([]);
   const [data, setData] = useState([]);
-  const [modalValues, setModalValues] = useState(defaultModalValues);
+  const [modalValues, setModalValues] = useState();
   const [clearForm, setClearForm] = useState(false);
 
   const showModal = () => setIsModalVisible(true);
-  const handleOk = () => {
-    setIsModalVisible(false);
-    // console.log(form.getFieldValue());
-  };
+  const handleOk = () => setIsModalVisible(false);
   const handleCancel = () => setIsModalVisible(false);
   const rowSelection = {
-    onChange: (selectedKeys, selectedRows) => setSelected(selectedRows),
+    onChange: (_, selectedRows) => setSelected(selectedRows),
   };
 
-  const handleDelete = (deleteUsers) => {
-    let currentUsers = data;
-    deleteUsers.map((deleteUser) => {
-      currentUsers = currentUsers.filter((user) => user.key !== deleteUser.key);
-      //   setUsers(currentUsers);
-    });
-    // setModalValues(defaultModalValues);
+  const [dataLoading, startDataLoading, stopDataLoading] = Loading();
+  const [sendLoading, startSendLoading, stopSendLoading] = Loading();
+
+  const lan = useSelector((state) => state.languageReducer);
+
+  const handleDelete = () => {
+    selected.map((course) =>
+      deleteData(`courses/${course._id}`).then((res) => getAllData())
+    );
     setSelected([]);
   };
 
   const handleAdd = () => {
-    setModalValues(defaultModalValues);
     showModal();
-    // setClearForm(true);
+    setClearForm(true);
   };
 
-  const handleEdit = (selected) => {
+  const handleEdit = () => {
     showModal();
-    setModalValues(...selected);
+    setModalValues(selected[0]);
   };
 
   const getUser = (item) => {
-    console.log("selected", selected);
-    console.log("item", item);
-    let isThere = false;
-    // users.map((user) => {
-    //   if (user.email === item.email) isThere = true;
-    // });
-    // isThere && toast.error("same Email");
-    // isThere ? setUsers(users) : setUsers([...users, { ...item, key: uuid() }]);
+    startSendLoading();
     if (selected.length === 0) {
-      postCourse(item);
+      postData("bootcamps/62544344acb6e30016507b25/courses", item).then(
+        (res) => {
+          getAllData();
+          stopSendLoading();
+        }
+      );
     } else {
-      console.log("update");
-      updateCourse(item);
+      startSendLoading();
+      updateData(`courses/62544344acb6e30016507b25`, item).then((res) => {
+        getAllData();
+        stopSendLoading();
+      });
     }
   };
 
-  const editUser = (oldValues, newValues) => {
-    let sameElements = 0;
-    // for (let key in oldValues) {
-    //   if (oldValues[key] === newValues[key]) sameElements++;
-    // }
-
-    // if (sameElements === 4) toast.error("not edited");
-    // else {
-    //   let index = users.indexOf(oldValues);
-    //   users.splice(index, 1, newValues);
-    //   setUsers([...users]);
-    // }
-  };
-
   const getAllData = () => {
-    axios.get(API_URL + "courses").then((res) => {
+    startDataLoading();
+    getData("courses").then((res) => {
       setData(res.data.data);
-      console.log(res.data.data);
+      stopDataLoading();
     });
   };
 
-  useEffect(() => {
-    axios.get(API_URL + "courses").then((res) => {
-      setData(res.data.data);
-      console.log(res.data.data);
-    });
-  }, []);
-
-  const token = {
-    headers: {
-      Autorization:
-        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkN2E1MTRiNWQyYzEyYzc0NDliZTA0MiIsImlhdCI6MTY0OTMzMDkxMiwiZXhwIjoxNjUxOTIyOTEyfQ.dcmqmgSfHM61U9vS894IAN5tMClZPxHbtyiSHY1noDI",
-    },
-  };
-
-  const postCourse = (values) => {
-    axios
-      .post(API_URL + "/5d713995b721c3bb38c1f5d0/courses", values, token)
-      .then((res) => {
-        setData(res.data.data);
-      })
-      .then(getAllData());
-  };
-
-  const updateCourse = (values) => {
-    console.log(values);
-    axios
-      .post(API_URL + "/courses/624ecaf3cca42900169220c2", values, token)
-      .then((res) => {
-        setData(res.data.data);
-      })
-      .then(getAllData());
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => getAllData(), []);
 
   return (
     <div>
-      <div className="p-2">
-        <div className="actions d-flex gap-3">
-          <button className="btn btn-success" onClick={() => handleAdd()}>
-            Add
-          </button>
-          {selected.length === 1 && (
-            <button
-              className="btn btn-primary"
-              onClick={() => handleEdit(selected)}
-            >
-              Edit
-            </button>
-          )}
-          {selected.length !== 0 && (
-            <button
-              className="btn btn-danger"
-              onClick={() => handleDelete(selected)}
-            >
-              Delete
-            </button>
-          )}
-        </div>
-      </div>
+      <PagesTop
+        selected={selected}
+        handleAdd={handleAdd}
+        handleEdit={handleEdit}
+        handleDelete={handleDelete}
+        title={lan.courses}
+      />
 
-      <Divider />
-
-      <div style={{ overflowY: "scroll", height: "60vh" }}>
+      <div style={{ overflowY: "scroll", height: "58vh" }}>
         <Table
           rowSelection={{
             type: "checkbox",
@@ -153,6 +96,7 @@ const Courses = () => {
           rowKey="_id"
           columns={columns}
           dataSource={data}
+          loading={dataLoading}
         />
       </div>
 
@@ -163,13 +107,12 @@ const Courses = () => {
         onCancel={handleCancel}
       >
         <CoursesForm
-          editUser={editUser}
           getUser={getUser}
           modalValues={modalValues}
           clearForm={clearForm}
+          sendLoading={sendLoading}
         />
       </Modal>
-      <ToastContainer />
     </div>
   );
 };

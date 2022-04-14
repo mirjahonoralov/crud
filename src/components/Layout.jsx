@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Layout as AntLayout, Menu } from "antd";
+import { Button, Layout as AntLayout, Menu, Select } from "antd";
 import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
@@ -9,50 +9,83 @@ import {
   UsergroupAddOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-import { API_URL, TOKEN } from "../const";
-import axios from "axios";
+import { Link, Navigate, Outlet, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { changeEn, changeRu, changeUz } from "../redux/actions/languageActions";
+import { ContentWrapper, ThemeLangWrapper } from "./Layout.style";
+import uz from "../assets/uz.png";
+import ru from "../assets/ru.png";
+import en from "../assets/en.png";
+import { FaMoon } from "react-icons/fa";
+import { BsSun } from "react-icons/bs";
+import { toDark, toLight } from "../redux/actions/themeActions";
+import { TOKEN } from "../const";
 
 const { Header, Sider, Content } = AntLayout;
 
 const Layout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const toggle = () => {
-    setCollapsed(!collapsed);
+  const toggle = () => setCollapsed(!collapsed);
+
+  const navigate = useNavigate();
+  const logout = () => {
+    localStorage.removeItem("project_token");
+    navigate("/");
   };
 
-  const logout = () => {
-    localStorage.removeItem(TOKEN);
-    axios.get(API_URL + "logout");
-    window.location.href = "/";
+  const lan = useSelector((state) => state.languageReducer);
+  const theme = useSelector((state) => state.themeReducer);
+  const dispatch = useDispatch();
+
+  const { Option } = Select;
+
+  function handleChange(value) {
+    if (value === "uz") dispatch(changeUz());
+    else if (value === "ru") dispatch(changeRu());
+    else if (value === "en") dispatch(changeEn());
+  }
+
+  const [changedTheme, setChangedTheme] = useState(true);
+  const changeTheme = () => {
+    setChangedTheme(!changedTheme);
+    changedTheme ? dispatch(toDark()) : dispatch(toLight());
   };
+
+  const token = localStorage.getItem(TOKEN);
 
   return (
-    <div className="">
+    <div>
       <AntLayout id="components-layout-demo-custom-trigger">
         <Sider trigger={null} collapsible collapsed={collapsed}>
           <Link to="/">
             <div className="logo d-flex align-items-center ps-2 fs-6">
-              <HeatMapOutlined className="me-2" /> CRUD
+              <HeatMapOutlined className="me-2" /> {!collapsed ? "CRUD" : ""}
             </div>
           </Link>
           <Menu theme="dark" mode="inline" defaultSelectedKeys={["1"]}>
             <Menu.Item key="1" icon={<UserOutlined />}>
-              <Link to="students">Students</Link>
+              <Link to="/bootcamps">{lan.bootcamps}</Link>
             </Menu.Item>
             <Menu.Item key="2" icon={<UsergroupAddOutlined />}>
-              <Link to="/groups">Groups</Link>
+              <Link to="/users">{lan.users}</Link>
             </Menu.Item>
             <Menu.Item key="3" icon={<UploadOutlined />}>
-              <Link to="/courses">Courses</Link>
+              <Link to="/courses">{lan.courses}</Link>
             </Menu.Item>
             <Menu.Item key="4" icon={<LogoutOutlined />} onClick={logout}>
-              <Link to="/">Logout</Link>
+              <Link to="/">{lan.logout}</Link>
             </Menu.Item>
           </Menu>
         </Sider>
-        <AntLayout className="site-layout">
-          <Header className="site-layout-background" style={{ padding: 0 }}>
+        <AntLayout>
+          <Header
+            className="site-layout-background"
+            style={{
+              padding: 0,
+              background: theme.bgColor,
+              color: theme.textColor,
+            }}
+          >
             {React.createElement(
               collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
               {
@@ -60,17 +93,32 @@ const Layout = ({ children }) => {
                 onClick: toggle,
               }
             )}
+            <ThemeLangWrapper>
+              <Select defaultValue="uz" onChange={handleChange}>
+                <Option value="uz">
+                  uz
+                  {/* <img src={uz} alt="" /> */}
+                </Option>
+                <Option value="ru">{/* ru <img src={ru} alt="" /> */}</Option>
+                <Option value="en">{/* en <img src={en} alt="" /> */}</Option>
+              </Select>
+
+              <Button shape="circle" onClick={changeTheme}>
+                {changedTheme ? <FaMoon /> : <BsSun />}
+              </Button>
+            </ThemeLangWrapper>
           </Header>
-          <Content
-            className="site-layout-background"
-            style={{
-              margin: "24px 16px",
-              padding: 24,
-              minHeight: 280,
-            }}
-          >
-            {children}
-          </Content>
+          <ContentWrapper theme={theme}>
+            <Content
+              style={{
+                backgroundColor: `${theme.bgColor}`,
+                color: `${theme.textColor}`,
+              }}
+              className="site-layout-background"
+            >
+              {token ? <Outlet /> : <Navigate to="/login" />}
+            </Content>
+          </ContentWrapper>
         </AntLayout>
       </AntLayout>
     </div>

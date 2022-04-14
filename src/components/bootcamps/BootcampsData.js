@@ -1,3 +1,6 @@
+import { useSelector } from "react-redux";
+
+// const lan = useSelector((state) => state.languageReducer);
 export const columns = [
   {
     title: "Name",

@@ -1,24 +1,30 @@
-import { Button, Form, Input, Radio, Select } from "antd";
 import React from "react";
+import { Button, Form, Input, Radio, Select } from "antd";
 import { CAREERS } from "../../const";
-import { layout } from "./StudentsData";
+import { layout } from "./BootcampsData";
+import { useSelector } from "react-redux";
 
-const StudentsForm = ({ handleOk, defaultValues }) => {
+const BootcampsForm = ({ handleOk, modalValues, sendLoading, clearForm }) => {
   const [form] = Form.useForm();
-
-  defaultValues && form.setFieldsValue(defaultValues);
+  modalValues.name && form.setFieldsValue(modalValues);
+  clearForm && form.resetFields();
 
   const onFinish = (values) => {
     handleOk(values);
+    form.resetFields();
   };
+
+  const theme = useSelector((state) => state.themeReducer);
+  console.log(theme);
 
   return (
     <Form
       {...layout}
       form={form}
-      name="student"
+      name="bootcamp"
       onFinish={onFinish}
       initialValues={{ jobGuarantee: false }}
+      // style={{ background: theme.bgColor, color: theme.textColor }}
     >
       <Form.Item
         name="name"
@@ -30,13 +36,6 @@ const StudentsForm = ({ handleOk, defaultValues }) => {
       <Form.Item
         name="description"
         label="Description"
-        rules={[{ required: false, message: "Not filled" }]}
-      >
-        <Input />
-      </Form.Item>
-      <Form.Item
-        name="slug"
-        label="Slug"
         rules={[{ required: false, message: "Not filled" }]}
       >
         <Input />
@@ -74,8 +73,8 @@ const StudentsForm = ({ handleOk, defaultValues }) => {
         </Select>
       </Form.Item>
       <Form.Item
-        name="user"
-        label="User"
+        name="website"
+        label="Website"
         rules={[{ required: false, message: "Not filled" }]}
       >
         <Input />
@@ -86,11 +85,11 @@ const StudentsForm = ({ handleOk, defaultValues }) => {
           <Radio value={false}>No</Radio>
         </Radio.Group>
       </Form.Item>
-      <Button type="primary" htmlType="submit">
+      <Button type="primary" htmlType="submit" sendLoading={sendLoading}>
         Submit
       </Button>
     </Form>
   );
 };
 
-export default StudentsForm;
+export default BootcampsForm;

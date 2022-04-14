@@ -1,17 +1,14 @@
 import React from "react";
 import { Form, Input, Button } from "antd";
 import { layout, validateMessages } from "./CoursesFormData";
-import uuid from "react-uuid";
 
-const GroupForm = ({ getUser, modalValues, editUser, clearForm }) => {
+const GroupForm = ({ getUser, modalValues, clearForm, sendLoading }) => {
   const [form] = Form.useForm();
-  form.setFieldsValue(modalValues);
+  modalValues && form.setFieldsValue(modalValues);
   !modalValues.name && clearForm && form.resetFields();
 
   const onFinish = (values) => {
-    modalValues.title
-      ? editUser(modalValues, { ...values, key: uuid() })
-      : getUser(values);
+    getUser(values);
     form.resetFields();
   };
 
@@ -26,7 +23,7 @@ const GroupForm = ({ getUser, modalValues, editUser, clearForm }) => {
       >
         <Form.Item
           name="title"
-          label="title"
+          label="Title"
           rules={[
             {
               required: true,
@@ -37,7 +34,18 @@ const GroupForm = ({ getUser, modalValues, editUser, clearForm }) => {
         </Form.Item>
         <Form.Item
           name="tuition"
-          label="tuition"
+          label="Tuition"
+          rules={[
+            {
+              required: true,
+            },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          name="description"
+          label="Description"
           rules={[
             {
               required: true,
@@ -48,7 +56,7 @@ const GroupForm = ({ getUser, modalValues, editUser, clearForm }) => {
         </Form.Item>
         <Form.Item
           name="weeks"
-          label="weeks"
+          label="Weeks"
           rules={[
             {
               required: true,
@@ -59,7 +67,7 @@ const GroupForm = ({ getUser, modalValues, editUser, clearForm }) => {
         </Form.Item>
         <Form.Item
           name="minimumSkill"
-          label="minimumSkill"
+          label="MinimumSkill"
           rules={[
             {
               required: true,
@@ -68,36 +76,9 @@ const GroupForm = ({ getUser, modalValues, editUser, clearForm }) => {
         >
           <Input />
         </Form.Item>
-        {/* <Form.Item
-          name="email"
-          label="Email"
-          rules={[
-            {
-              type: "email",
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          name="age"
-          label="Age"
-          rules={[
-            {
-              type: "number",
-              min: 0,
-              max: 99,
-            },
-          ]}
-        >
-          <InputNumber />
-        </Form.Item>
-        <Form.Item name="address" label="address">
-          <Input.TextArea />
-        </Form.Item> */}
         <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
           <div className="d-flex gap-3">
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" loading={sendLoading}>
               Submit
             </Button>
             <Button htmlType="button" onClick={() => form.resetFields()}>
